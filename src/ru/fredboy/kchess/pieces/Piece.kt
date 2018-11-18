@@ -1,10 +1,11 @@
 package ru.fredboy.kchess.pieces
 
-import ru.fredboy.kchess.Canvas
+import ru.fredboy.kchess.Chess
 import ru.fredboy.utils.Matrix2
 import java.awt.Point
+import java.io.Serializable
 
-abstract class Piece(private val team: Int, private val type: Int) {
+abstract class Piece(private val team: Int, private val type: Int) : Serializable {
 
     private var moved: Boolean = false
 
@@ -17,7 +18,7 @@ abstract class Piece(private val team: Int, private val type: Int) {
     }
 
     protected fun isValidMove(board: Matrix2<Piece?>, x1: Int, y1: Int, x2: Int, y2: Int): Boolean {
-        return team != Canvas.turn % 2 || Canvas.willHelp(board, x1, y1, Point(x2, y2), team)
+        return team != Chess.turn % 2 || Chess.willHelp(board, x1, y1, Point(x2, y2), team)
     }
 
     abstract fun canMove(board: Matrix2<Piece?>, x1: Int, y1: Int, x2: Int, y2: Int): Boolean

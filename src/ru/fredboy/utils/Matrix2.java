@@ -1,12 +1,11 @@
 package ru.fredboy.utils;
 
-import ru.fredboy.kchess.Canvas;
-
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
-public class Matrix2<E> {
+public class Matrix2<E> implements Serializable, Cloneable {
 
     private Object[][] values;
 
@@ -44,8 +43,26 @@ public class Matrix2<E> {
         for (int x = 0; x < width; x++) for (int y = 0; y < height; y++) values[x][y] = null;
     }
 
+    public void copyFromMatrix(Matrix2<E> matrix) {
+        if (matrix.width != width || matrix.height != height) return;
+
+        for (int x = 0; x < width; x++) for (int y = 0; y < height; y++) {
+            set(x, y, matrix.get(x, y));
+        }
+    }
+
     public Iterator<E> iterator() {
         return new Itr();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Matrix2<E> cpy() {
+        try {
+            return (Matrix2<E>) clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private class Itr implements Iterator<E> {

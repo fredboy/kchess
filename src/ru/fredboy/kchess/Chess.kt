@@ -1,6 +1,10 @@
 package ru.fredboy.kchess
 
 import ru.fredboy.kchess.pieces.*
+import ru.fredboy.network.Client
+import ru.fredboy.network.Data
+import ru.fredboy.network.Networker
+import ru.fredboy.network.Server
 import ru.fredboy.utils.Matrix2
 import java.awt.Color
 import java.awt.Graphics
@@ -15,7 +19,7 @@ import javax.swing.JOptionPane
 import javax.swing.JPanel
 import javax.swing.Timer
 
-class Canvas : JPanel(), MouseListener {
+class Chess : JPanel(), MouseListener {
 
     companion object {
         var check: Boolean = false
@@ -49,7 +53,7 @@ class Canvas : JPanel(), MouseListener {
     private val cellSize = 64
 
     private val pieceImages: Matrix2<Image> = Matrix2(2, 6)
-    private val board: Matrix2<Piece?> = Matrix2(8, 8)
+    private var board: Matrix2<Piece?> = Matrix2(8, 8)
     private var selectedPiece: Piece? = null
     private var selectedPieceX: Int = 0
     private var selectedPieceY: Int = 0
@@ -60,6 +64,14 @@ class Canvas : JPanel(), MouseListener {
     val statusBar = JPanel()
     val status = JLabel()
 
+    var networker: Networker? = null
+
+    private fun checkNetworker(type: Networker.Type): Boolean {
+        return if (networker != null) {
+            networker!!.type == type
+        } else false
+    }
+
     init {
         addMouseListener(this)
         for (i in 0..5) {
@@ -69,6 +81,13 @@ class Canvas : JPanel(), MouseListener {
 
     fun startPaintTimer() {
         timer.start()
+    }
+
+    fun receiveData(data: Data) {
+        board.copyFromMatrix(data.board)
+        turn = data.turn
+        check = checkCheck(board, turn % 2)
+        if (checkMate(turn % 2)) JOptionPane.showMessageDialog(this, "Checkmate!")
     }
 
     fun newGame() {
@@ -100,6 +119,7 @@ class Canvas : JPanel(), MouseListener {
         check = false
         selectedPiece = null
         turn = 0
+
     }
 
     private fun drawChessBoard(g: Graphics) {
@@ -122,12 +142,15 @@ class Canvas : JPanel(), MouseListener {
     }
 
     private fun selectPiece(x: Int, y: Int): Boolean {
-        if (board[x, y] != null && board[x, y]!!.getTeam() == turn % 2) {
+        return if (board[x, y] != null &&
+                (networker == null && board[x, y]!!.getTeam() == turn % 2 ||
+                        checkNetworker(Networker.Type.SERVER) && turn % 2 == 0 ||
+                        checkNetworker(Networker.Type.CLIENT) && turn % 2 == 1)) {
             selectedPieceX = x
             selectedPieceY = y
             selectedPiece = board[selectedPieceX, selectedPieceY]
-            return true
-        } else return false
+            true
+        } else false
     }
 
     override fun paint(g: Graphics) {
@@ -188,6 +211,12 @@ class Canvas : JPanel(), MouseListener {
             } else selectPiece(tmpX, tmpY)
         } else if (e.button == MouseEvent.BUTTON3)
             selectedPiece = null
+
+        if (networker != null) {
+            val b = Matrix2<Piece?>(8, 8)
+            b.copyFromMatrix(board)
+            networker!!.sendData(Data(b, turn))
+        }
     }
 
     override fun mouseExited(e: MouseEvent) {}
