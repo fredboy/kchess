@@ -2,7 +2,10 @@ package ru.fredboy.kchess
 
 import ru.fredboy.kchess.pieces.*
 import ru.fredboy.utils.Matrix2
-import java.awt.*
+import java.awt.Color
+import java.awt.Graphics
+import java.awt.Image
+import java.awt.Point
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.File
@@ -118,6 +121,15 @@ class Canvas : JPanel(), MouseListener {
         }
     }
 
+    private fun selectPiece(x: Int, y: Int): Boolean {
+        if (board[x, y] != null && board[x, y]!!.getTeam() == turn % 2) {
+            selectedPieceX = x
+            selectedPieceY = y
+            selectedPiece = board[selectedPieceX, selectedPieceY]
+            return true
+        } else return false
+    }
+
     override fun paint(g: Graphics) {
         boardX = width / 2 - (cellSize * 8) / 2
         boardY = height / 2 - (cellSize * 8) / 2
@@ -125,31 +137,15 @@ class Canvas : JPanel(), MouseListener {
         status.text = if (turn % 2 == 0) "White" else "Black"
 
         g.color = Color.LIGHT_GRAY
+        g.fillRect(0, 0, width, height)
         drawChessBoard(g)
     }
 
     private fun checkMate(team: Int): Boolean {
         if (!check) return false
-        var kingX = 0
-        var kingY = 0
-        while (board[kingX, kingY] == null ||
-                (board[kingX, kingY]!!.getType() != 4 && board[kingX, kingY]!!.getTeam() == team)) {
-            kingX++
-            if (kingX >= board.width) {
-                kingX = 0
-                kingY++
-                if (kingY >= board.height) return false
-            }
-        }
-        if (board[kingX, kingY]!!.hasMoves(board, kingX, kingY)) return false
-        for (x in 0..7) for (y in 0..7) {
-            if (board[x, y] != null && board[x, y]!!.getTeam() == team) {
-                val moves: ArrayList<Point> = board[x, y]!!.getMoves(board, x, y)
-                if (moves.isNotEmpty()) {
-                    for (move in moves) if (willHelp(board, x, y, move, team)) return false
-                }
-            }
-        }
+        for (x in 0..7) for (y in 0..7)
+            if (board[x, y] != null && board[x, y]!!.getTeam() == team && board[x, y]!!.hasMoves(board, x, y))
+                return false
         return true
     }
 
@@ -161,15 +157,12 @@ class Canvas : JPanel(), MouseListener {
         val tmpX = (e.x - boardX) / cellSize
         val tmpY = (e.y - boardY) / cellSize
         if (e.button == MouseEvent.BUTTON1 && checkBoardBounds(e.x, e.y)) {
-            if (selectedPiece == null && board[tmpX, tmpY] != null && board[tmpX, tmpY]!!.getTeam() == turn % 2) {
-                selectedPieceX = tmpX
-                selectedPieceY = tmpY
-                selectedPiece = board[selectedPieceX, selectedPieceY]
-            } else if (selectedPiece != null) {
+            if (selectedPiece != null) {
                 if (selectedPiece!!.canMove(board, selectedPieceX, selectedPieceY, tmpX, tmpY) ||
                         selectedPiece!!.canKill(board, selectedPieceX, selectedPieceY, tmpX, tmpY)) {
                     //castling...
-                    if (board[tmpX, tmpY] != null && board[tmpX, tmpY]!!.getType() == 1) {
+                    if (board[tmpX, tmpY] != null && board[tmpX, tmpY]!!.getType() == 1 &&
+                            board[tmpX, tmpY]!!.getTeam() == turn % 2) {
                         board[selectedPieceX + 2 * (Math.abs(tmpX - selectedPieceX) / (tmpX - selectedPieceX)), tmpY] =
                                 board[selectedPieceX, selectedPieceY]
                         board[selectedPieceX, selectedPieceY] = null
@@ -181,14 +174,18 @@ class Canvas : JPanel(), MouseListener {
                         board[tmpX, tmpY] = selectedPiece
                         board[selectedPieceX, selectedPieceY] = null
                     }
-                    check = checkCheck(board, (turn + 1) % 2)
-                    if (checkMate((turn + 1) % 2))
-                        JOptionPane.showMessageDialog(this, "Checkmate!")
                     selectedPiece!!.madeMove()
                     selectedPiece = null
                     turn++
+
+                    check = checkCheck(board, turn % 2)
+                    if (checkMate(turn % 2))
+                        JOptionPane.showMessageDialog(this, "Checkmate!")
+
+                } else {
+                    selectPiece(tmpX, tmpY)
                 }
-            }
+            } else selectPiece(tmpX, tmpY)
         } else if (e.button == MouseEvent.BUTTON3)
             selectedPiece = null
     }
