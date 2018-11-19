@@ -12,9 +12,9 @@ private val mainFrame = JFrame("KChess")
 private var chess = Chess()
 
 fun setupFrame() {
-    mainFrame.setLocationRelativeTo(null)
     mainFrame.minimumSize = Dimension(64 * 10, 64 * 10)
     mainFrame.size = mainFrame.minimumSize
+    mainFrame.setLocationRelativeTo(null)
     mainFrame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
     mainFrame.add(chess)
 
