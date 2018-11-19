@@ -24,10 +24,10 @@ public abstract class Networker implements Runnable {
         this.chess = chess;
     }
 
-    public Data readData() {
+    public Data readData() throws IOException{
         try {
             return (Data) input.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
@@ -51,11 +51,17 @@ public abstract class Networker implements Runnable {
 
     @Override
     public void run() {
-        Data data;
         while (true) {
-            data = readData();
-            if (data != null) chess.receiveData(data);
+            try {
+                Data data = readData();
+                if (data != null) chess.receiveData(data);
+            } catch (IOException e) {
+                closeSocket();
+                break;
+            }
         }
+        System.out.println("Socket disconnected.");
+        chess.exitMultiplayer();
     }
 
     public abstract Type getType();

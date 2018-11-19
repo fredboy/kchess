@@ -1,5 +1,6 @@
 package ru.fredboy.kchess
 
+import com.google.common.net.InetAddresses
 import ru.fredboy.network.Client
 import ru.fredboy.network.Server
 import java.awt.BorderLayout
@@ -16,6 +17,7 @@ fun setupFrame() {
     mainFrame.size = mainFrame.minimumSize
     mainFrame.setLocationRelativeTo(null)
     mainFrame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+
     mainFrame.add(chess)
 
     val menuBar = JMenuBar()
@@ -26,14 +28,32 @@ fun setupFrame() {
 
     val serverItem = JMenuItem("Start server")
     serverItem.addActionListener {
-        chess.networker = Server(chess, 1969)
+        try{
+            val t = Thread {JOptionPane.showMessageDialog(mainFrame, "Waiting for client...")}
+            t.start()
+            chess.networker = Server(chess, 1969)
+            t.interrupt()
+        } catch(e: Exception) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
+        }
+        JOptionPane.showMessageDialog(mainFrame, "Client connected")
         chess.newGame()
     }
 
     val clientItem = JMenuItem("Connect")
     clientItem.addActionListener {
-        chess.networker = Client(chess, JOptionPane.showInputDialog(mainFrame, "Server address"), 1969)
-        chess.newGame()
+        val address =  JOptionPane.showInputDialog(mainFrame, "Server address")
+        if (InetAddresses.isInetAddress(address)) {
+            try{
+                chess.networker = Client(chess, address, 1969)
+            } catch(e: Exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
+            }
+            JOptionPane.showMessageDialog(mainFrame, "Connected")
+            chess.newGame()
+        } else {
+            JOptionPane.showMessageDialog(mainFrame, "Invalid address")
+        }
     }
 
     gameMenu.add(newItem)

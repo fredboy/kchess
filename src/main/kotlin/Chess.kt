@@ -81,6 +81,13 @@ class Chess : JPanel(), MouseListener {
         if (checkMate(turn % 2)) JOptionPane.showMessageDialog(this, "Checkmate!")
     }
 
+    fun exitMultiplayer() {
+        val str = if (networker!!.type == Networker.Type.SERVER) "Client" else "Server"
+        JOptionPane.showMessageDialog(this, "$str disconnected")
+        networker = null
+        newGame()
+    }
+
     fun newGame() {
         board.clear()
 

@@ -7,21 +7,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class Client extends Networker{
+public class Client extends Networker {
 
-    public Client(Chess chess, String address, int port) {
+    public Client(Chess chess, String address, int port) throws IOException {
         super(chess);
-        try {
-            this.chess = chess;
-            System.out.println("Connecting to " + address + ":" + port);
-            socket = new Socket(address, port);
-            System.out.println("Connected to " + socket.getRemoteSocketAddress());
-            output = new ObjectOutputStream(socket.getOutputStream());
-            input = new ObjectInputStream(socket.getInputStream());
-            new Thread(this).start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        this.chess = chess;
+        System.out.println("Connecting to " + address + ":" + port);
+        socket = new Socket(address, port);
+        System.out.println("Connected to " + socket.getRemoteSocketAddress());
+        output = new ObjectOutputStream(socket.getOutputStream());
+        input = new ObjectInputStream(socket.getInputStream());
+        new Thread(this).start();
     }
 
     @Override

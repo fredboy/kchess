@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     compile(kotlin("stdlib-jdk8"))
+    compile("com.google.guava", "guava", "27.0-jre")
     testCompile("junit", "junit", "4.12")
 }
 
