@@ -75,7 +75,7 @@ class Chess : JPanel(), MouseListener {
     init {
         addMouseListener(this)
         for (i in 0..5) {
-            for (j in 0..1) pieceImages[j, i] = ImageIO.read(File("res/${i}_$j.png"))
+            for (j in 0..1) pieceImages[j, i] = ImageIO.read(javaClass.classLoader.getResource(("pieces/${i}_$j.png")))
         }
     }
 
