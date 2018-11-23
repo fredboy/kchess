@@ -1,22 +1,21 @@
 package ru.fredboy.kchess
 
+import ru.fredboy.kchess.network.Data
+import ru.fredboy.kchess.network.Networker
 import ru.fredboy.kchess.pieces.*
-import ru.fredboy.network.Data
-import ru.fredboy.network.Networker
+import ru.fredboy.utils.GamePanel
 import ru.fredboy.utils.Matrix2
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Image
 import java.awt.Point
 import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import javax.imageio.ImageIO
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
-import javax.swing.Timer
 
-class Chess : JPanel(), MouseListener {
+class Chess : GamePanel() {
 
     companion object {
         var check: Boolean = false
@@ -46,11 +45,11 @@ class Chess : JPanel(), MouseListener {
         }
     }
 
-    private val timer = Timer(10) { repaint() }
     private val cellSize = 64
 
     private val pieceImages: Matrix2<Image> = Matrix2(2, 6)
-    private var board: Matrix2<Piece?> = Matrix2(8, 8)
+    private val board: Matrix2<Piece?> = Matrix2(8, 8)
+
     private var selectedPiece: Piece? = null
     private var selectedPieceX: Int = 0
     private var selectedPieceY: Int = 0
@@ -64,14 +63,14 @@ class Chess : JPanel(), MouseListener {
     var networker: Networker? = null
 
     init {
-        addMouseListener(this)
         for (i in 0..5) {
-            for (j in 0..1) pieceImages[j, i] = ImageIO.read(javaClass.classLoader.getResource(("pieces/${i}_$j.png")))
+            for (j in 0..1)
+                pieceImages[j, i] = ImageIO.read(javaClass.classLoader.getResource(("pieces/" + i + "_" + j + ".png")))
         }
     }
 
     fun startPaintTimer() {
-        timer.start()
+        paintTimer.start()
     }
 
     fun receiveData(data: Data) {
@@ -118,12 +117,13 @@ class Chess : JPanel(), MouseListener {
         selectedPiece = null
         turn = 0
 
+        if (checkNetworker(Networker.Type.SERVER)) networker!!.sendData(Data(board, turn))
     }
 
-    private fun checkNetworker(type: Networker.Type): Boolean {
+    private fun checkNetworker(type: Networker.Type?): Boolean {
         return if (networker != null) {
-            networker!!.type == type
-        } else false
+            (networker!!.type == type && networker!!.isConnected) || (type == null && !networker!!.isConnected)
+        } else type == null
     }
 
     private fun drawChessBoard(g: Graphics) {
@@ -147,7 +147,7 @@ class Chess : JPanel(), MouseListener {
 
     private fun selectPiece(x: Int, y: Int): Boolean {
         return if (board[x, y] != null && board[x, y]!!.getTeam() == turn % 2 &&
-                ((networker == null) ||
+                (checkNetworker(null) ||
                         (checkNetworker(Networker.Type.SERVER) && turn % 2 == 0) ||
                         (checkNetworker(Networker.Type.CLIENT) && turn % 2 == 1))) {
             selectedPieceX = x
@@ -155,17 +155,6 @@ class Chess : JPanel(), MouseListener {
             selectedPiece = board[selectedPieceX, selectedPieceY]
             true
         } else false
-    }
-
-    override fun paint(g: Graphics) {
-        boardX = width / 2 - (cellSize * 8) / 2
-        boardY = height / 2 - (cellSize * 8) / 2
-
-        status.text = if (turn % 2 == 0) "White" else "Black"
-
-        g.color = Color.LIGHT_GRAY
-        g.fillRect(0, 0, width, height)
-        drawChessBoard(g)
     }
 
     private fun checkMate(team: Int): Boolean {
@@ -176,11 +165,24 @@ class Chess : JPanel(), MouseListener {
         return true
     }
 
-    override fun mouseReleased(e: MouseEvent) {}
+    private fun checkBoardBounds(x: Int, y: Int): Boolean {
+        return ((x >= boardX && x <= boardX + (8 * cellSize)) && (y >= boardY && y <= boardY + (8 * cellSize)))
+    }
 
-    override fun mouseEntered(e: MouseEvent) {}
+    override fun paint(g: Graphics) {
+        boardX = width / 2 - (cellSize * 8) / 2
+        boardY = height / 2 - (cellSize * 8) / 2
 
-    override fun mouseClicked(e: MouseEvent) {
+        status.text = if (turn % 2 == 0) "White" else "Black"
+        status.text += " | Turn: $turn"
+        status.text += " | " + if (check) "Check" else "No check"
+
+        g.color = Color.LIGHT_GRAY
+        g.fillRect(0, 0, width, height)
+        drawChessBoard(g)
+    }
+
+    override fun mousePressed(e: MouseEvent) {
         val tmpX = (e.x - boardX) / cellSize
         val tmpY = (e.y - boardY) / cellSize
         if (e.button == MouseEvent.BUTTON1 && checkBoardBounds(e.x, e.y)) {
@@ -205,7 +207,7 @@ class Chess : JPanel(), MouseListener {
                     selectedPiece = null
                     turn++
 
-                    if (networker != null) {
+                    if (!checkNetworker(null)) {
                         val b = Matrix2<Piece?>(8, 8)
                         b.copyFromMatrix(board)
                         networker!!.sendData(Data(b, turn))
@@ -218,14 +220,6 @@ class Chess : JPanel(), MouseListener {
                 } else selectPiece(tmpX, tmpY)
             } else selectPiece(tmpX, tmpY)
         } else if (e.button == MouseEvent.BUTTON3) selectedPiece = null
-    }
-
-    override fun mouseExited(e: MouseEvent) {}
-
-    override fun mousePressed(e: MouseEvent) {}
-
-    private fun checkBoardBounds(x: Int, y: Int): Boolean {
-        return ((x >= boardX && x <= boardX + (8 * cellSize)) && (y >= boardY && y <= boardY + (8 * cellSize)))
     }
 
 }

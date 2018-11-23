@@ -1,8 +1,8 @@
 package ru.fredboy.kchess
 
 import com.google.common.net.InetAddresses
-import ru.fredboy.network.Client
-import ru.fredboy.network.Server
+import ru.fredboy.kchess.network.Client
+import ru.fredboy.kchess.network.Server
 import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.*
@@ -28,37 +28,31 @@ fun setupFrame() {
 
     val serverItem = JMenuItem("Start server")
     serverItem.addActionListener {
-        try{
-            val t = Thread {JOptionPane.showMessageDialog(mainFrame, "Waiting for client...")}
-            t.start()
-            chess.networker = Server(chess, 1969)
-            t.interrupt()
-        } catch(e: Exception) {
-            JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
-        }
-        JOptionPane.showMessageDialog(mainFrame, "Client connected")
-        chess.newGame()
+        chess.networker = Server(chess, 1969)
     }
 
     val clientItem = JMenuItem("Connect")
     clientItem.addActionListener {
-        val address =  JOptionPane.showInputDialog(mainFrame, "Server address")
-        if (InetAddresses.isInetAddress(address)) {
-            try{
-                chess.networker = Client(chess, address, 1969)
-            } catch(e: Exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
-            }
-            JOptionPane.showMessageDialog(mainFrame, "Connected")
-            chess.newGame()
+        val address = JOptionPane.showInputDialog(mainFrame, "Server address")
+        if (address != null && InetAddresses.isInetAddress(address)) {
+            chess.networker = Client(chess, address, 1969)
         } else {
             JOptionPane.showMessageDialog(mainFrame, "Invalid address")
+        }
+    }
+
+    val disconnectItem = JMenuItem("Disconnect")
+    disconnectItem.addActionListener {
+        if (chess.networker != null) {
+            chess.exitMultiplayer()
+            chess.newGame()
         }
     }
 
     gameMenu.add(newItem)
     gameMenu.add(serverItem)
     gameMenu.add(clientItem)
+    gameMenu.add(disconnectItem)
     menuBar.add(gameMenu)
     mainFrame.jMenuBar = menuBar
 

@@ -1,4 +1,4 @@
-package ru.fredboy.network;
+package ru.fredboy.kchess.network;
 
 import ru.fredboy.kchess.Chess;
 
@@ -41,6 +41,10 @@ public abstract class Networker implements Runnable {
         }
     }
 
+    public boolean isConnected() {
+        return socket != null && socket.isConnected();
+    }
+
     public void closeSocket() {
         try {
             socket.close();
@@ -51,6 +55,16 @@ public abstract class Networker implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Connected to " + socket.getRemoteSocketAddress());
+        chess.newGame();
+
+        try {
+            output = new ObjectOutputStream(socket.getOutputStream());
+            input = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         while (true) {
             try {
                 Data data = readData();
