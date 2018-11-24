@@ -56,7 +56,6 @@ public abstract class Networker implements Runnable {
     @Override
     public void run() {
         System.out.println("Connected to " + socket.getRemoteSocketAddress());
-        chess.newGame();
 
         try {
             output = new ObjectOutputStream(socket.getOutputStream());
@@ -64,6 +63,8 @@ public abstract class Networker implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        if (getType() == Type.SERVER) chess.newGame();
 
         while (true) {
             try {

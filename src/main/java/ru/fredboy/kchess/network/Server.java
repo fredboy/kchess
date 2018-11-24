@@ -23,6 +23,16 @@ public class Server extends Networker {
     }
 
     @Override
+    public void closeSocket() {
+        try {
+            socket.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void run() {
         try {
             socket = serverSocket.accept();

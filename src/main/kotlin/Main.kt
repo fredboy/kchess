@@ -10,7 +10,7 @@ import javax.swing.border.BevelBorder
 
 
 private val mainFrame = JFrame("KChess")
-private var chess = Chess()
+val chess = Chess()
 
 fun setupFrame() {
     mainFrame.minimumSize = Dimension(64 * 10, 64 * 10)
@@ -28,24 +28,26 @@ fun setupFrame() {
 
     val serverItem = JMenuItem("Start server")
     serverItem.addActionListener {
-        chess.networker = Server(chess, 1969)
+        if (chess.networker == null) chess.networker = Server(chess, 1969)
     }
 
     val clientItem = JMenuItem("Connect")
     clientItem.addActionListener {
-        val address = JOptionPane.showInputDialog(mainFrame, "Server address")
-        if (address != null && InetAddresses.isInetAddress(address)) {
-            chess.networker = Client(chess, address, 1969)
-        } else {
-            JOptionPane.showMessageDialog(mainFrame, "Invalid address")
+        if (chess.networker == null) {
+            val address = JOptionPane.showInputDialog(mainFrame, "Server address")
+            if (address != null && (InetAddresses.isInetAddress(address) || address == "localhost")) {
+                chess.networker = Client(chess, address, 1969)
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid address")
+            }
         }
     }
 
     val disconnectItem = JMenuItem("Disconnect")
     disconnectItem.addActionListener {
         if (chess.networker != null) {
-            chess.exitMultiplayer()
-            chess.newGame()
+            chess.networker!!.closeSocket()
+            chess.networker = null
         }
     }
 
