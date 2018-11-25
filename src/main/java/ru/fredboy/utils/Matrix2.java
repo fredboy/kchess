@@ -43,7 +43,7 @@ public class Matrix2<E> implements Serializable, Cloneable {
         for (int x = 0; x < width; x++) for (int y = 0; y < height; y++) values[x][y] = null;
     }
 
-    public void copyFromMatrix(Matrix2<E> matrix) {
+    public void copyDataFromMatrix(Matrix2<E> matrix) {
         if (matrix.width != width || matrix.height != height) return;
 
         for (int x = 0; x < width; x++) for (int y = 0; y < height; y++) {

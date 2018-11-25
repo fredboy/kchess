@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "ru.fredboy.kchess"
-version = "0.2"
+version = "0.3"
 
 val mainClassName = "$group.MainKt"
 

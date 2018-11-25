@@ -1,4 +1,4 @@
-package ru.fredboy.network;
+package ru.fredboy.kchess.network;
 
 import ru.fredboy.kchess.pieces.Piece;
 import ru.fredboy.utils.Matrix2;

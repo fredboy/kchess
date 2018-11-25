@@ -1,11 +1,11 @@
-package ru.fredboy.network;
-
-import ru.fredboy.kchess.Chess;
+package ru.fredboy.kchess.network;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import static ru.fredboy.kchess.MainKt.getChess;
 
 public abstract class Networker implements Runnable {
 
@@ -14,17 +14,11 @@ public abstract class Networker implements Runnable {
         CLIENT
     }
 
-    protected Chess chess;
-
     protected Socket socket;
     protected ObjectInputStream input;
     protected ObjectOutputStream output;
 
-    Networker(Chess chess) {
-        this.chess = chess;
-    }
-
-    public Data readData() throws IOException{
+    public Data readData() throws IOException {
         try {
             return (Data) input.readObject();
         } catch (ClassNotFoundException e) {
@@ -41,6 +35,10 @@ public abstract class Networker implements Runnable {
         }
     }
 
+    public boolean isConnected() {
+        return socket != null && socket.isConnected();
+    }
+
     public void closeSocket() {
         try {
             socket.close();
@@ -51,17 +49,28 @@ public abstract class Networker implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Connected to " + socket.getRemoteSocketAddress());
+
+        try {
+            output = new ObjectOutputStream(socket.getOutputStream());
+            input = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (getType() == Type.SERVER) getChess().newGame();
+
         while (true) {
             try {
                 Data data = readData();
-                if (data != null) chess.receiveData(data);
+                if (data != null) getChess().receiveData(data);
             } catch (IOException e) {
                 closeSocket();
                 break;
             }
         }
         System.out.println("Socket disconnected.");
-        chess.exitMultiplayer();
+        getChess().exitMultiplayer();
     }
 
     public abstract Type getType();

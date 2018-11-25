@@ -1,8 +1,8 @@
 package ru.fredboy.kchess
 
 import com.google.common.net.InetAddresses
-import ru.fredboy.network.Client
-import ru.fredboy.network.Server
+import ru.fredboy.kchess.network.Client
+import ru.fredboy.kchess.network.Server
 import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.*
@@ -10,7 +10,8 @@ import javax.swing.border.BevelBorder
 
 
 private val mainFrame = JFrame("KChess")
-private var chess = Chess()
+
+val chess = Chess()
 
 fun setupFrame() {
     mainFrame.minimumSize = Dimension(64 * 10, 64 * 10)
@@ -28,37 +29,33 @@ fun setupFrame() {
 
     val serverItem = JMenuItem("Start server")
     serverItem.addActionListener {
-        try{
-            val t = Thread {JOptionPane.showMessageDialog(mainFrame, "Waiting for client...")}
-            t.start()
-            chess.networker = Server(chess, 1969)
-            t.interrupt()
-        } catch(e: Exception) {
-            JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
-        }
-        JOptionPane.showMessageDialog(mainFrame, "Client connected")
-        chess.newGame()
+        if (chess.networker == null) chess.networker = Server(1969)
     }
 
     val clientItem = JMenuItem("Connect")
     clientItem.addActionListener {
-        val address =  JOptionPane.showInputDialog(mainFrame, "Server address")
-        if (InetAddresses.isInetAddress(address)) {
-            try{
-                chess.networker = Client(chess, address, 1969)
-            } catch(e: Exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Error: ${e.message}")
+        if (chess.networker == null) {
+            val address = JOptionPane.showInputDialog(mainFrame, "Server address")
+            if (address != null && (InetAddresses.isInetAddress(address) || address == "localhost")) {
+                chess.networker = Client(address, 1969)
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid address")
             }
-            JOptionPane.showMessageDialog(mainFrame, "Connected")
-            chess.newGame()
-        } else {
-            JOptionPane.showMessageDialog(mainFrame, "Invalid address")
+        }
+    }
+
+    val disconnectItem = JMenuItem("Disconnect")
+    disconnectItem.addActionListener {
+        if (chess.networker != null) {
+            chess.networker!!.closeSocket()
+            chess.networker = null
         }
     }
 
     gameMenu.add(newItem)
     gameMenu.add(serverItem)
     gameMenu.add(clientItem)
+    gameMenu.add(disconnectItem)
     menuBar.add(gameMenu)
     mainFrame.jMenuBar = menuBar
 
