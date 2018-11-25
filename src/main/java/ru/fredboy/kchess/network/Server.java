@@ -24,7 +24,7 @@ public class Server extends Networker {
     @Override
     public void closeSocket() {
         try {
-            socket.close();
+            super.closeSocket();
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();

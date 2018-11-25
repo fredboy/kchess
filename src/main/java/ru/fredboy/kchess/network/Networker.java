@@ -41,6 +41,8 @@ public abstract class Networker implements Runnable {
 
     public void closeSocket() {
         try {
+            input.close();
+            output.close();
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
