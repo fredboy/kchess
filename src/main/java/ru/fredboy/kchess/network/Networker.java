@@ -1,11 +1,11 @@
 package ru.fredboy.kchess.network;
 
-import ru.fredboy.kchess.Chess;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import static ru.fredboy.kchess.MainKt.getChess;
 
 public abstract class Networker implements Runnable {
 
@@ -14,17 +14,11 @@ public abstract class Networker implements Runnable {
         CLIENT
     }
 
-    protected Chess chess;
-
     protected Socket socket;
     protected ObjectInputStream input;
     protected ObjectOutputStream output;
 
-    Networker(Chess chess) {
-        this.chess = chess;
-    }
-
-    public Data readData() throws IOException{
+    public Data readData() throws IOException {
         try {
             return (Data) input.readObject();
         } catch (ClassNotFoundException e) {
@@ -64,19 +58,19 @@ public abstract class Networker implements Runnable {
             e.printStackTrace();
         }
 
-        if (getType() == Type.SERVER) chess.newGame();
+        if (getType() == Type.SERVER) getChess().newGame();
 
         while (true) {
             try {
                 Data data = readData();
-                if (data != null) chess.receiveData(data);
+                if (data != null) getChess().receiveData(data);
             } catch (IOException e) {
                 closeSocket();
                 break;
             }
         }
         System.out.println("Socket disconnected.");
-        chess.exitMultiplayer();
+        getChess().exitMultiplayer();
     }
 
     public abstract Type getType();

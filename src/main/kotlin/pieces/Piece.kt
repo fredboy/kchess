@@ -1,17 +1,15 @@
 package ru.fredboy.kchess.pieces
 
 import ru.fredboy.kchess.chess
-import ru.fredboy.kchess.willHelp
 import java.awt.Point
 import java.io.Serializable
 
-abstract class Piece(private val team: Int, private val type: Int) : Serializable {
+abstract class Piece(val team: Int, val type: Int) : Serializable {
 
-    private var moved: Boolean = false
-
-    fun getTeam() = team
-    fun getType() = type
-    fun isMoved() = moved
+    var moved: Boolean = false
+        private set(value) {
+            field = value
+        }
 
     fun madeMove() {
         moved = true
@@ -35,7 +33,7 @@ abstract class Piece(private val team: Int, private val type: Int) : Serializabl
     }
 
     protected fun isValidMove(x1: Int, y1: Int, x2: Int, y2: Int): Boolean {
-        return team != chess.turn % 2 || willHelp(x1, y1, Point(x2, y2), team)
+        return team != chess.turn % 2 || chess.willHelp(x1, y1, Point(x2, y2), team)
     }
 
     abstract fun canMove(x1: Int, y1: Int, x2: Int, y2: Int): Boolean

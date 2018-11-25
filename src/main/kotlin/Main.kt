@@ -10,6 +10,7 @@ import javax.swing.border.BevelBorder
 
 
 private val mainFrame = JFrame("KChess")
+
 val chess = Chess()
 
 fun setupFrame() {
@@ -28,7 +29,7 @@ fun setupFrame() {
 
     val serverItem = JMenuItem("Start server")
     serverItem.addActionListener {
-        if (chess.networker == null) chess.networker = Server(chess, 1969)
+        if (chess.networker == null) chess.networker = Server(1969)
     }
 
     val clientItem = JMenuItem("Connect")
@@ -36,7 +37,7 @@ fun setupFrame() {
         if (chess.networker == null) {
             val address = JOptionPane.showInputDialog(mainFrame, "Server address")
             if (address != null && (InetAddresses.isInetAddress(address) || address == "localhost")) {
-                chess.networker = Client(chess, address, 1969)
+                chess.networker = Client(address, 1969)
             } else {
                 JOptionPane.showMessageDialog(mainFrame, "Invalid address")
             }

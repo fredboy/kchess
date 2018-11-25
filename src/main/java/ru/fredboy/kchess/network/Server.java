@@ -1,20 +1,19 @@
 package ru.fredboy.kchess.network;
 
-import ru.fredboy.kchess.Chess;
-
 import javax.swing.*;
 import java.io.IOException;
 import java.net.ServerSocket;
+
+import static ru.fredboy.kchess.MainKt.getChess;
 
 public class Server extends Networker {
 
     private ServerSocket serverSocket;
 
-    public Server(Chess chess, int port) throws IOException {
-        super(chess);
+    public Server(int port) throws IOException {
         serverSocket = new ServerSocket(port);
         new Thread(this).start();
-        JOptionPane.showMessageDialog(chess, "Server started.");
+        JOptionPane.showMessageDialog(getChess(), "Server started.");
     }
 
     @Override
@@ -38,11 +37,11 @@ public class Server extends Networker {
             socket = serverSocket.accept();
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(chess, "Error: " + e.getMessage());
-            chess.exitMultiplayer();
+            JOptionPane.showMessageDialog(getChess(), "Error: " + e.getMessage());
+            getChess().exitMultiplayer();
         }
         if (socket.isConnected()) {
-            JOptionPane.showMessageDialog(chess, "Client connected");
+            JOptionPane.showMessageDialog(getChess(), "Client connected");
             super.run();
         }
     }

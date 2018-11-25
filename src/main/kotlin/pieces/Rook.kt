@@ -37,7 +37,7 @@ class Rook(team: Int) : Piece(team, 1) {
 
     override fun canKill(x1: Int, y1: Int, x2: Int, y2: Int): Boolean {
         if (!((x1 == x2 || y1 == y2) && chess.board[x2, y2] != null &&
-                        chess.board[x2, y2]!!.getTeam() != getTeam())) return false
+                        chess.board[x2, y2]!!.team != team)) return false
         return possibleMove(chess.board, x1, y1, x2, y2) && isValidMove(x1, y1, x2, y2)
     }
 

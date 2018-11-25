@@ -1,10 +1,11 @@
 package ru.fredboy.kchess.network;
 
-import ru.fredboy.kchess.Chess;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.net.Socket;
+
+import static ru.fredboy.kchess.MainKt.getChess;
 
 public class Client extends Networker {
 
@@ -13,8 +14,7 @@ public class Client extends Networker {
     private String address;
     private int port;
 
-    public Client(Chess chess, String address, int port) {
-        super(chess);
+    public Client(String address, int port) {
         this.address = address;
         this.port = port;
         clientThread = new Thread(this);
@@ -34,7 +34,7 @@ public class Client extends Networker {
             while (System.currentTimeMillis() - timestamp < 5000) {
             }
             if (socket == null) {
-                JOptionPane.showMessageDialog(chess,
+                JOptionPane.showMessageDialog(getChess(),
                         "Error: timeout " + (System.currentTimeMillis() - timestamp) + "ms");
                 clientThread.interrupt();
             }
@@ -45,12 +45,12 @@ public class Client extends Networker {
             socket = new Socket(address, port);
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(chess, "Error: " + e.toString());
+            JOptionPane.showMessageDialog(getChess(), "Error: " + e.toString());
             timeoutThread.interrupt();
-            chess.exitMultiplayer();
+            getChess().exitMultiplayer();
         }
         if (socket.isConnected()) {
-            JOptionPane.showMessageDialog(chess, "Connected");
+            JOptionPane.showMessageDialog(getChess(), "Connected");
             super.run();
         }
     }

@@ -11,7 +11,7 @@ class King(team: Int) : Piece(team, 4) {
         var res = false
         for (x in 0..7) for (y in 0..7) {
             if (chess.board[x, y] != null &&
-                    ((chess.board[x, y]!!.getType() == 4 && chess.board[x, y]!!.canMove(x, y, x2, y2)) ||
+                    ((chess.board[x, y]!!.type == 4 && chess.board[x, y]!!.canMove(x, y, x2, y2)) ||
                             chess.board[x, y]!!.canKill(x, y, x2, y2))) {
                 res = true
             }
@@ -22,8 +22,8 @@ class King(team: Int) : Piece(team, 4) {
     }
 
     private fun castlingPossible(x1: Int, y1: Int, x2: Int, y2: Int): Boolean {
-        if (chess.board[x2, y2] != null && chess.board[x2, y2]!!.getType() == 1 && chess.board[x2, y2]!!.getTeam() == getTeam() &&
-                !chess.board[x2, y2]!!.isMoved() && !isMoved() &&
+        if (chess.board[x2, y2] != null && chess.board[x2, y2]!!.type == 1 && chess.board[x2, y2]!!.team == team &&
+                !chess.board[x2, y2]!!.moved && !moved &&
                 !isInvalidMove(x1, y1, x2, y2) && !isInvalidMove(x1, y1, x1, y1)) {
             val dx = Math.abs(x2 - x1) / (x2 - x1)
             var x = x1 + dx
@@ -49,7 +49,7 @@ class King(team: Int) : Piece(team, 4) {
                 (Math.abs(x2 - x1) == Math.abs(y2 - y1)) &&
                 Math.abs(x2 - x1) == 1 && Math.abs(y2 - y1) == 1) &&
                 chess.board[x2, y2] != null &&
-                chess.board[x2, y2]!!.getTeam() != getTeam() &&
+                chess.board[x2, y2]!!.team != team &&
                 !isInvalidMove(x1, y1, x2, y2))
     }
 

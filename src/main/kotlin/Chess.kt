@@ -2,12 +2,14 @@ package ru.fredboy.kchess
 
 import ru.fredboy.kchess.network.Data
 import ru.fredboy.kchess.network.Networker
+
 import ru.fredboy.kchess.pieces.*
 import ru.fredboy.utils.GamePanel
 import ru.fredboy.utils.Matrix2
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Image
+import java.awt.Point
 import java.awt.event.MouseEvent
 import javax.imageio.ImageIO
 import javax.swing.JLabel
@@ -29,13 +31,19 @@ class Chess : GamePanel() {
 
     val board: Matrix2<Piece?> = Matrix2(8, 8)
 
-    var check: Boolean = false
-    var turn: Int = 0
-
     val statusBar = JPanel()
     val status = JLabel()
 
     var networker: Networker? = null
+
+    var check: Boolean = false
+        private set(value) {
+            field = value
+        }
+    var turn: Int = 0
+        private set(value) {
+            field = value
+        }
 
     init {
         for (i in 0..5) {
@@ -49,7 +57,7 @@ class Chess : GamePanel() {
     }
 
     fun receiveData(data: Data) {
-        board.copyFromMatrix(data.board)
+        board.copyDataFromMatrix(data.board)
         turn = data.turn
         check = checkCheck(turn % 2)
         if (checkMate(turn % 2)) JOptionPane.showMessageDialog(this, "Checkmate!")
@@ -100,6 +108,37 @@ class Chess : GamePanel() {
         } else type == null
     }
 
+    fun willHelp(x: Int, y: Int, move: Point, team: Int): Boolean {
+        val tmp = board[move.x, move.y]
+        board[move.x, move.y] = board[x, y]
+        board[x, y] = null
+        val tmpBool = checkCheck(team)
+        board[x, y] = board[move.x, move.y]
+        board[move.x, move.y] = tmp
+        return !tmpBool
+    }
+
+    private fun checkCheck(team: Int): Boolean {
+        for (x in 0..7) for (y in 0..7) {
+            if (board[x, y] != null && board[x, y]!!.team != team) {
+                for (xx in 0..7) for (yy in 0..7) {
+                    if (board[x, y]!!.canKill(x, y, xx, yy) && board[xx, yy]!!.type == 4) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun checkMate(team: Int): Boolean {
+        if (!check) return false
+        for (x in 0..7) for (y in 0..7)
+            if (board[x, y] != null && board[x, y]!!.team == team && board[x, y]!!.hasMoves(x, y))
+                return false
+        return true
+    }
+
     private fun drawChessBoard(g: Graphics) {
         val isClient = checkNetworker(Networker.Type.CLIENT)
         val cm = if (isClient) -1 else 1
@@ -120,14 +159,14 @@ class Chess : GamePanel() {
 
             g.fillRect(drawX + x * cellSize * cm, drawY + y * cellSize * cm, cellSize, cellSize)
             if (board[x, y] != null) {
-                g.drawImage(pieceImages[board[x, y]!!.getTeam(), board[x, y]!!.getType()],
+                g.drawImage(pieceImages[board[x, y]!!.team, board[x, y]!!.type],
                         drawX + x * cellSize * cm, drawY + y * cellSize * cm, null)
             }
         }
     }
 
     private fun selectPiece(x: Int, y: Int): Boolean {
-        return if (board[x, y] != null && board[x, y]!!.getTeam() == turn % 2 &&
+        return if (board[x, y] != null && board[x, y]!!.team == turn % 2 &&
                 (checkNetworker(null) ||
                         (checkNetworker(Networker.Type.SERVER) && turn % 2 == 0) ||
                         (checkNetworker(Networker.Type.CLIENT) && turn % 2 == 1))) {
@@ -173,8 +212,8 @@ class Chess : GamePanel() {
                 if (selectedPiece!!.canMove(selectedPieceX, selectedPieceY, tmpX, tmpY) ||
                         selectedPiece!!.canKill(selectedPieceX, selectedPieceY, tmpX, tmpY)) {
                     //castling...
-                    if (board[tmpX, tmpY] != null && board[tmpX, tmpY]!!.getType() == 1 &&
-                            board[tmpX, tmpY]!!.getTeam() == turn % 2) {
+                    if (board[tmpX, tmpY] != null && board[tmpX, tmpY]!!.type == 1 &&
+                            board[tmpX, tmpY]!!.team == turn % 2) {
                         board[selectedPieceX + 2 * (Math.abs(tmpX - selectedPieceX) / (tmpX - selectedPieceX)), tmpY] =
                                 board[selectedPieceX, selectedPieceY]
                         board[selectedPieceX, selectedPieceY] = null
@@ -192,7 +231,7 @@ class Chess : GamePanel() {
 
                     if (!checkNetworker(null)) {
                         val b = Matrix2<Piece?>(8, 8)
-                        b.copyFromMatrix(board)
+                        b.copyDataFromMatrix(board)
                         networker!!.sendData(Data(b, turn))
                     }
 

@@ -14,7 +14,7 @@ class Knight(team: Int) : Piece(team, 2) {
         return (((Math.abs(x2 - x1) == 2 && Math.abs(y2-y1) == 1) ||
                 (Math.abs(x2 - x1) == 1 && Math.abs(y2-y1) == 2)) &&
                 chess.board[x2, y2] != null &&
-                chess.board[x2, y2]!!.getTeam() != getTeam()) && isValidMove(x1, y1, x2, y2)
+                chess.board[x2, y2]!!.team != team) && isValidMove(x1, y1, x2, y2)
     }
 
 }
