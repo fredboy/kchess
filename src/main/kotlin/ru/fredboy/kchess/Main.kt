@@ -8,17 +8,16 @@ import java.awt.Dimension
 import javax.swing.*
 import javax.swing.border.BevelBorder
 
-
-private val mainFrame = JFrame("KChess")
+private val DEFAULT_WINDOW_SIZE = Dimension(64 * 10, 64 * 10)
 
 val chess = Chess()
 
 fun setupFrame() {
-    mainFrame.minimumSize = Dimension(64 * 10, 64 * 10)
-    mainFrame.size = mainFrame.minimumSize
+    val mainFrame = JFrame("KChess");
+    mainFrame.minimumSize = DEFAULT_WINDOW_SIZE
+    mainFrame.size = DEFAULT_WINDOW_SIZE
     mainFrame.setLocationRelativeTo(null)
     mainFrame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
     mainFrame.add(chess)
 
     val menuBar = JMenuBar()
@@ -69,7 +68,7 @@ fun setupFrame() {
     mainFrame.isVisible = true
 }
 
-fun main(args: Array<String>) {
+fun main() {
     setupFrame()
     chess.newGame()
     chess.startPaintTimer()
